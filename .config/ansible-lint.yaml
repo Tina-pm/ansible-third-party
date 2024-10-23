@@ -1,6 +1,9 @@
 ---
 profile: production
 exclude_paths:
+  - roles/libvirt_host
+  - roles/libvirt_vm
+  - roles/ntp
   - roles/resolv
 skip_list:
   - meta-runtime[unsupported-version]  # 2.14 deemed too old by ansible-lint

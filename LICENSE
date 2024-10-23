@@ -1,6 +1,21 @@
 Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
 Upstream-Contact: Martina Ferrari <tina@tina.pm>
 
+Files: roles/libvirt_host/*
+License: UNKNOWN
+Copyright: 2022 Mark Goddard (mark@stackhpc.com)
+Comment: https://github.com/stackhpc/ansible-role-libvirt-host
+
+Files: roles/libvirt_vm/*
+License: UNKNOWN
+Copyright: 2024 Mark Goddard (mark@stackhpc.com)
+Comment: https://github.com/stackhpc/ansible-role-libvirt-vm
+
+Files: roles/ntp/*
+License: MIT
+Copyright: 2017 Jeff Geerling
+Comment: https://github.com/geerlingguy/ansible-role-ntp
+
 Files: roles/resolv/*
 License: MIT
 Copyright: 2016 Andrew J Huffman
