@@ -1,0 +1,152 @@
+---
+# List of pools to define and start.
+# Each item should be a dict containing the following items:
+# name: The name of the pool.
+# type: The type of the pool, currently only 'dir', 'logical' or 'zfs' are
+#       supported. 'lvm2' is supported as an alias for 'logical', but this
+#       alias is deprecated and will be removed in a future release.
+# capacity:  The capacity, in bytes, of the pool.
+# path: The absolute path to the pool's backing directory.
+# mode: The access mode of the pool.
+# owner: The owner of the pool.
+# group: The group of the pool.
+libvirt_host_pools: []
+
+# List of networks to define and start.
+# Each item should be a dict containing the following items:
+# name: The name of the network.
+# mode: The forwarding mode of the network, currently only 'bridge' is
+# supported.
+# bridge: The name of the bridge interface for this network.
+libvirt_host_networks: []
+
+# Whether to require that Intel Virtualisation Technology (VT) is enabled in
+# order to run this role. While this provides better VM performance, it may not
+# be available in certain environments.
+libvirt_host_require_vt: true
+
+# List of architectures for which to install QEMU system emulators, e.g. x86.
+libvirt_host_qemu_emulators: "{{ [] if libvirt_host_require_vt | bool else ['x86'] }}"
+
+# Whether or not to enable UEFI support. In some cases this requires installing
+# extra packages.
+libvirt_host_enable_efi_support: false
+
+# This determines The directory under /var/run that libvirt uses to store state,
+# e.g unix domain sockets, as well as the default name of the PID file. Override
+# this if you have a conflict with the default socket e.g it could be in use by the
+# nova_libvirt container
+libvirt_host_var_prefix: ""
+
+# Where the Unix Domain sockets are stored
+libvirt_host_socket_dir: >-
+  {%- if libvirt_host_var_prefix -%}
+  /var/run/{{ libvirt_host_var_prefix }}
+  {%- endif -%}
+
+# Path to PID file which prevents mulitple instances of the daemon from
+# spawning
+libvirt_host_pid_path: >-
+  {%- if libvirt_host_var_prefix -%}
+  /var/run/{{ libvirt_host_var_prefix }}.pid
+  {%- endif -%}
+
+# Command line arguments passed to libvirtd by the init system when
+# libvirtd is started - quotes will be added
+libvirt_host_libvirtd_args: >-
+  {%- if libvirt_host_pid_path -%}
+  -p {{ libvirt_host_pid_path }}
+  {%- endif %}
+
+# The libvirt connnection URI
+libvirt_host_uri: >-
+  {%- if libvirt_host_socket_dir -%}
+  qemu+unix:///system?socket={{ libvirt_host_socket_dir }}/libvirt-sock
+  {%- endif %}
+
+# Whether the python3 version of the libvirt python bindings should be
+# installed. If false, the python 2 bindings will be installed.
+libvirt_host_python3: "{{ ansible_facts.python.version.major == 3 }}"
+
+# Whether to install and enable the libvirt daemon.
+libvirt_host_install_daemon: true
+
+# Whether to install and enable the libvirt client.
+libvirt_host_install_client: true
+
+# List of additional packages to install on libvirt daemon hosts.
+libvirt_host_extra_daemon_packages: []
+
+# List of additional packages to install on libvirt client hosts.
+libvirt_host_extra_client_packages: []
+
+# Whether to configure libvirtd.conf.
+libvirt_host_libvirtd_conf_enabled: true
+# Configuration for libvirtd.conf. Dict mapping option names to values.
+libvirt_host_libvirtd_conf: {}
+
+# Whether to configure qemu.conf.
+libvirt_host_qemu_conf_enabled: true
+# Configuration for qemu.conf. Dict mapping option names to values.
+libvirt_host_qemu_conf: {}
+
+# Whether to enable SASL authentication support.
+libvirt_host_enable_sasl_support: false
+
+# Whether to configure SASL authentication (/etc/sasl2/libvirt.conf).
+libvirt_host_sasl_conf_enabled: "{{ libvirt_host_enable_sasl_support | bool }}"
+# Configuration for SASL authentication (/etc/sasl2/libvirt.conf). String.
+libvirt_host_sasl_conf: |
+  mech_list: {{ libvirt_host_sasl_mech_list | join(' ') }}
+  sasldb_path: /etc/libvirt/passwd.db
+# List of enabled libvirt SASL authentication mechanisms.
+libvirt_host_sasl_mech_list:
+  - "{{ 'SCRAM-SHA-256' if libvirt_host_tls_listen | bool else 'DIGEST-MD5' }}"
+
+# List of SASL authentication credentials to create. Each item is a dict
+# containing "username" and "password" items.
+libvirt_host_sasl_credentials:
+  - username: "{{ libvirt_host_sasl_authname }}"
+    password: "{{ libvirt_host_sasl_password }}"
+# Username for SASL authentication.
+libvirt_host_sasl_authname: libvirt
+# Password for SASL authentication.
+libvirt_host_sasl_password:
+
+# Whether to configure SASL authentication credentials (/etc/libvirt/auth.conf).
+libvirt_host_sasl_auth_conf_enabled: "{{ libvirt_host_enable_sasl_support | bool }}"
+# Configuration for SASL authentication credentials (/etc/libvirt/auth.conf). String.
+libvirt_host_sasl_auth_conf: |
+  [credentials-default]
+  authname={{ libvirt_host_sasl_authname }}
+  password={{ libvirt_host_sasl_password }}
+
+  [auth-libvirt-default]
+  credentials=default
+# Name of file to write SASL authentication credentials to.
+libvirt_host_sasl_auth_conf_filename: "/etc/libvirt/auth.conf"
+# Owner of file to write SASL authentication credentials to.
+libvirt_host_sasl_auth_conf_owner: "root"
+# Group of file to write SASL authentication credentials to.
+libvirt_host_sasl_auth_conf_group: "root"
+# Mode of file to write SASL authentication credentials to.
+libvirt_host_sasl_auth_conf_mode: "0600"
+
+# Whether to enable the systemd TCP socket unit.
+libvirt_host_tcp_listen: false
+# Systemd TCP socket ListenStream. See man systemd.socket for format.
+libvirt_host_tcp_listen_address:
+
+# Whether to enable the systemd TLS socket unit.
+libvirt_host_tls_listen: false
+# Systemd TLS socket ListenStream. See man systemd.socket for format.
+libvirt_host_tls_listen_address:
+# TLS server and client certificates.
+libvirt_host_tls_server_cert:
+libvirt_host_tls_server_key:
+libvirt_host_tls_client_cert:
+libvirt_host_tls_client_key:
+libvirt_host_tls_cacert:
+
+# Whether to configure AppArmor for directory storage pools.
+libvirt_host_configure_apparmor: "{{ libvirt_host_install_daemon | bool }}"
