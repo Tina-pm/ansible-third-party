@@ -1,6 +1,6 @@
 namespace: tina_pm
 name: third_party
-version: 1.0.0
+version: 1.1.0
 
 authors:
   - Adeodato Simó
@@ -12,4 +12,4 @@ tags:
 readme: README.md
 license_file: LICENSE
 
-repository: http://github.com/Tina-pm/ansible-roles.git
+repository: https://github.com/Tina-pm/tina_pm.third_party.git

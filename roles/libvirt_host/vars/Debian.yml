@@ -1,0 +1,44 @@
+---
+# List of package dependencies common to all Debian distributions
+libvirt_host_libvirt_packages_common:
+  - qemu-kvm
+
+# List of all daemon packages to install.
+libvirt_host_libvirt_packages_libvirt_daemon:
+  # The apparmor package contains the apparmor_parser tool.
+  - "{% if ansible_facts.apparmor.status| default == 'enabled' %}apparmor{% endif %}"
+  - >-
+    {%- if (ansible_facts.distribution == "Ubuntu" and
+            ansible_facts.distribution_major_version is version_compare('16.04', '<')) or
+           (ansible_facts.distribution == "Debian" and
+            ansible_facts.distribution_major_version is version_compare('8', '<')) -%}
+    libvirt-bin
+    {%- else -%}
+    libvirt-daemon-system
+    {%- endif -%}
+
+# List of default daemon packages to install.
+libvirt_host_libvirt_packages_default: "{{ libvirt_host_libvirt_packages_common + libvirt_host_libvirt_packages_libvirt_daemon }}"
+
+# List of default client packages to install.
+libvirt_host_libvirt_packages_client_default:
+  - libvirt-clients
+  - "{{ 'python3-libvirt' if libvirt_host_python3 | bool else 'python-libvirt' }}"
+  - "{{ 'python3-lxml' if libvirt_host_python3 | bool else 'python-lxml' }}"
+
+# Packages that are only necessary if you require EFI support
+libvirt_host_packages_efi:
+  - ovmf
+
+# Packages for RBD volume pool support
+libvirt_host_packages_rbd_volume_pool:
+  - libvirt-daemon-driver-storage-rbd
+  - qemu-block-extra
+
+# Packages for SASL authentication support.
+libvirt_host_packages_sasl:
+  - libsasl2-modules-gssapi-mit
+  - sasl2-bin
+
+# These are passed to the lineinfile module to customize configuration files
+libvirt_host_lineinfile_extra_rules: []
