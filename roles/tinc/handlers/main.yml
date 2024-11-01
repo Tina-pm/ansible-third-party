@@ -1,0 +1,21 @@
+---
+# vim:ts=2:sw=2:et:ai:sts=2
+
+- name: reload tinc
+  ansible.builtin.service:
+    name: '{{ tinc__service_name }}'
+    state: reloaded
+
+- name: restart tinc
+  ansible.builtin.service:
+    name: '{{ tinc__service_name }}'
+    state: restarted
+
+- name: reload systemd
+  ansible.builtin.systemd:
+    daemon_reload: true
+
+- name: reload ferm
+  ansible.builtin.service:
+    name: ferm
+    state: reloaded

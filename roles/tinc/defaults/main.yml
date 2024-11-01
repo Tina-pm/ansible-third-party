@@ -1,0 +1,47 @@
+---
+# vim:ts=2:sw=2:et:ai:sts=2
+
+# Set to True to disable and remove tinc from a host.
+tinc__remove: false
+
+tinc__netname: tinc
+
+# Configuration for hosts not present in the ansible inventory.
+# Format:
+#  tinc__external_hosts:
+#    windows_host1:
+#      tinc__public_addresses:
+#        - 1.2.3.4
+#      tinc__vpn_addresses:
+#        - 192.168.128.1/32
+#      tinc__allow_incoming_connections: true
+#      tinc__host_conf: |
+#        Address = 1.2.3.4
+#        Subnet = 192.168.128.1/32
+#
+#        -----BEGIN RSA PUBLIC KEY-----
+#        ...
+tinc__external_hosts: {}
+
+# Per-host
+tinc__public_addresses: '{{ [ansible_host] }}'
+tinc__port: 655
+tinc__allow_incoming_connections: true
+
+tinc__vpn_interface: '{{ tinc__netname }}'
+
+# IP addresses to assign to the VPN interface.
+tinc__vpn_addresses: []
+
+# Export the local IP addresses as single-host networks.
+tinc__vpn_local_subnets:
+  '{{ tinc__vpn_addresses | ipaddr("address") | ipaddr("host") }}'
+
+# Extra networks to export.
+tinc__vpn_extra_subnets:
+
+# Install ferm service configuration file.
+tinc__install_ferm_svc: false
+
+# Command paths.
+tinc__iproute2_path: /usr/bin/ip
