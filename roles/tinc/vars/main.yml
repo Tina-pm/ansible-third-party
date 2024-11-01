@@ -30,7 +30,6 @@ tinc__other_public_addresses: >-
    }}
 
 tinc__use_systemd: >-
-  {{ True if (ansible_service_mgr|d() and ansible_service_mgr == "systemd")
-     else False }}
+  {{ ansible_service_mgr | d() and ansible_service_mgr == "systemd" }}
 tinc__service_name: >-
   {{ "tinc@" + tinc__netname if tinc__use_systemd else "tinc" }}
