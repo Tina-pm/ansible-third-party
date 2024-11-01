@@ -1,22 +1,22 @@
 ---
 # vim:ts=2:sw=2:et:ai:sts=2
 
-- name: install tinc
+- name: Install tinc
   ansible.builtin.package:
     name: tinc
     state: present
 
-- name: check tinc uses systemd units
+- name: Check tinc uses systemd units
   ansible.builtin.stat:
     path: /lib/systemd/system/tinc@.service
   register: tinc__tinc_unit
 
-- name: set fact about systemd unit
+- name: Set fact about systemd unit
   ansible.builtin.set_fact:
     tinc__use_systemd: false
   when: not tinc__tinc_unit.stat.exists
 
-- name: set daemon parameters in /etc/default/tinc
+- name: Set daemon parameters in /etc/default/tinc
   ansible.builtin.lineinfile:
     dest: /etc/default/tinc
     line: EXTRA='-d -L'
@@ -26,13 +26,13 @@
   notify:
     - restart tinc
 
-- name: ensure tinc network directory exists
+- name: Ensure tinc network directory exists
   ansible.builtin.file:
     path: /etc/tinc/{{ tinc__netname }}/hosts
     recurse: true
     state: directory
 
-- name: add network to /etc/tinc/nets.boot
+- name: Add network to /etc/tinc/nets.boot
   ansible.builtin.lineinfile:
     dest: /etc/tinc/nets.boot
     line: '{{ tinc__netname }}'
@@ -42,7 +42,7 @@
     - restart tinc
   when: not tinc__use_systemd
 
-- name: create tinc.conf file from template
+- name: Create tinc.conf file from template
   ansible.builtin.template:
     src: tinc.conf.j2
     dest: /etc/tinc/{{ tinc__netname }}/tinc.conf
@@ -50,7 +50,7 @@
   notify:
     - reload tinc
 
-- name: create network configuration scripts
+- name: Create network configuration scripts
   ansible.builtin.template:
     src: '{{ item }}.j2'
     dest: /etc/tinc/{{ tinc__netname }}/{{ item }}
@@ -63,7 +63,7 @@
   notify:
     - restart tinc
 
-- name: check for crypto key pair
+- name: Check for crypto key pair
   ansible.builtin.command: >-
     awk '/^-----BEGIN RSA PUBLIC KEY-----$/,/^-----END RSA PUBLIC KEY-----$/'
     /etc/tinc/{{ tinc__netname }}/hosts/{{ inventory_hostname }}
@@ -73,7 +73,7 @@
   failed_when: tinc__public_key.rc not in (0, 1, 2)
   check_mode: false
 
-- name: set host parameters
+- name: Set host parameters
   ansible.builtin.template:
     src: host.conf.j2
     dest: /etc/tinc/{{ tinc__netname }}/hosts/{{ inventory_hostname }}
@@ -83,7 +83,7 @@
 
 # this is necessary because the public key will not be generated
 # (non-interactively) if the private key already exists
-- name: delete private key and regenerate keypair
+- name: Delete private key and regenerate keypair  # noqa: no-handler
   ansible.builtin.file:
     path: /etc/tinc/{{ tinc__netname }}/rsa_key.priv
     state: absent
@@ -91,7 +91,7 @@
   notify:
     - restart tinc
 
-- name: delete private key and regenerate keypair
+- name: Delete private key and regenerate keypair  # noqa: no-handler
   ansible.builtin.command: tincd -n {{ tinc__netname }} -K4096
   args:
     creates: /etc/tinc/{{ tinc__netname }}/rsa_key.priv
@@ -99,13 +99,13 @@
   notify:
     - restart tinc
 
-- name: find obsolete tinc host files
+- name: Find obsolete tinc host files
   ansible.builtin.command: ls /etc/tinc/{{ tinc__netname }}/hosts/
   register: tinc__host_files
   changed_when: false
   check_mode: false
 
-- name: remove obsolete tinc host files
+- name: Remove obsolete tinc host files
   ansible.builtin.file:
     path: /etc/tinc/{{ tinc__netname }}/hosts/{{ item }}
     state: absent
@@ -113,13 +113,13 @@
   when: >-
     item not in tinc__hostvars or tinc__hostvars[item].tinc__remove
 
-- name: fetch tinc hosts file after key creation
+- name: Fetch tinc hosts file after key creation
   ansible.builtin.fetch:
     src: /etc/tinc/{{ tinc__netname }}/hosts/{{ inventory_hostname }}
     dest: fetch/{{ tinc__netname }}/{{ inventory_hostname }}
     flat: true
 
-- name: create tinc hosts file for hosts outside of ansible
+- name: Create tinc hosts file for hosts outside of ansible
   ansible.builtin.copy:
     dest: /etc/tinc/{{ item.value.tinc__netname }}/hosts/{{ item.key }}
     content: '{{ item.value.tinc__host_conf }}'
@@ -129,7 +129,7 @@
     item.value.tinc__host_conf is defined and
     item.value.tinc__netname is defined
 
-- name: sync the fetched tinc hosts files on each host
+- name: Sync the fetched tinc hosts files on each host
   ansible.builtin.copy:
     src: fetch/{{ tinc__netname }}/
     dest: /etc/tinc/{{ tinc__netname }}/hosts/
@@ -137,20 +137,20 @@
   notify:
     - reload tinc
 
-- name: ensure tinc meta-service is started
+- name: Ensure tinc meta-service is started
   ansible.builtin.service:
     name: tinc
     enabled: true
     state: started
   when: tinc__use_systemd
 
-- name: ensure tinc is started
+- name: Ensure tinc is started
   ansible.builtin.service:
     name: '{{ tinc__service_name }}'
     enabled: true
     state: started
 
-- name: install ferm configuration
+- name: Install ferm configuration
   ansible.builtin.template:
     src: ferm.conf.j2
     dest: /etc/ferm/ferm.d/tinc.conf

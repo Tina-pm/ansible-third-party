@@ -1,34 +1,34 @@
 ---
 # vim:ts=2:sw=2:et:ai:sts=2
 
-- name: check tinc uses systemd units
+- name: Check tinc uses systemd units
   ansible.builtin.stat:
     path: /lib/systemd/system/tinc@.service
   register: tinc__tinc_unit
 
-- name: set fact about systemd unit
+- name: Set fact about systemd unit
   ansible.builtin.set_fact:
     tinc__use_systemd: false
   when: not tinc__tinc_unit.stat.exists
 
-- name: stop and disable tinc
+- name: Stop and disable tinc
   ansible.builtin.service:
     name: '{{ tinc__service_name }}'
     enabled: false
     state: stopped
 
-- name: delete tinc netname directory
+- name: Delete tinc netname directory
   ansible.builtin.file:
     path: /etc/tinc/{{ tinc__netname }}
     state: absent
 
-- name: delete nets.boot
+- name: Delete nets.boot
   ansible.builtin.lineinfile:
     dest: /etc/tinc/nets.boot
     line: '{{ tinc__netname }}'
     state: absent
 
-- name: delete systemd unit override
+- name: Delete systemd unit override
   ansible.builtin.file:
     path: /etc/systemd/system/{{ tinc__service_name }}.service.d/override.conf
     state: absent
@@ -36,7 +36,7 @@
     - reload systemd
   when: tinc__use_systemd
 
-- name: delete local configuration copy
+- name: Delete local configuration copy
   ansible.builtin.file:
     path: fetch/{{ tinc__netname }}/{{ inventory_hostname }}
     state: absent
