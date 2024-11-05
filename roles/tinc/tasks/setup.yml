@@ -1,0 +1,161 @@
+---
+# vim:ts=2:sw=2:et:ai:sts=2
+
+- name: Install tinc
+  ansible.builtin.package:
+    name: tinc
+    state: present
+
+- name: Check tinc uses systemd units
+  ansible.builtin.stat:
+    path: /lib/systemd/system/tinc@.service
+  register: tinc__tinc_unit
+
+- name: Set fact about systemd unit
+  ansible.builtin.set_fact:
+    tinc__use_systemd: false
+  when: not tinc__tinc_unit.stat.exists
+
+- name: Set daemon parameters in /etc/default/tinc
+  ansible.builtin.lineinfile:
+    dest: /etc/default/tinc
+    line: EXTRA='-d -L'
+    regexp: '^EXTRA\s*='
+    insertbefore: BOF
+    create: false
+  notify:
+    - restart tinc
+
+- name: Ensure tinc network directory exists
+  ansible.builtin.file:
+    path: /etc/tinc/{{ tinc__netname }}/hosts
+    recurse: true
+    state: directory
+
+- name: Add network to /etc/tinc/nets.boot
+  ansible.builtin.lineinfile:
+    dest: /etc/tinc/nets.boot
+    line: '{{ tinc__netname }}'
+    mode: '0644'
+    create: true
+  notify:
+    - restart tinc
+  when: not tinc__use_systemd
+
+- name: Create tinc.conf file from template
+  ansible.builtin.template:
+    src: tinc.conf.j2
+    dest: /etc/tinc/{{ tinc__netname }}/tinc.conf
+    mode: '0644'
+  notify:
+    - reload tinc
+
+- name: Create network configuration scripts
+  ansible.builtin.template:
+    src: '{{ item }}.j2'
+    dest: /etc/tinc/{{ tinc__netname }}/{{ item }}
+    mode: '0755'
+  loop:
+    - tinc-up
+    - tinc-down
+    - subnet-up
+    - subnet-down
+  notify:
+    - restart tinc
+
+- name: Check for crypto key pair
+  ansible.builtin.command: >-
+    awk '/^-----BEGIN RSA PUBLIC KEY-----$/,/^-----END RSA PUBLIC KEY-----$/'
+    /etc/tinc/{{ tinc__netname }}/hosts/{{ inventory_hostname }}
+  register: tinc__public_key
+  changed_when: >
+    not tinc__public_key.stdout.endswith('-----END RSA PUBLIC KEY-----')
+  failed_when: tinc__public_key.rc not in (0, 1, 2)
+  check_mode: false
+
+- name: Set host parameters
+  ansible.builtin.template:
+    src: host.conf.j2
+    dest: /etc/tinc/{{ tinc__netname }}/hosts/{{ inventory_hostname }}
+    mode: '0644'
+  notify:
+    - restart tinc
+
+# this is necessary because the public key will not be generated
+# (non-interactively) if the private key already exists
+- name: Delete private key and regenerate keypair  # noqa: no-handler
+  ansible.builtin.file:
+    path: /etc/tinc/{{ tinc__netname }}/rsa_key.priv
+    state: absent
+  when: tinc__public_key.changed
+  notify:
+    - restart tinc
+
+- name: Delete private key and regenerate keypair  # noqa: no-handler
+  ansible.builtin.command: tincd -n {{ tinc__netname }} -K4096
+  args:
+    creates: /etc/tinc/{{ tinc__netname }}/rsa_key.priv
+  when: tinc__public_key.changed
+  notify:
+    - restart tinc
+
+- name: Find obsolete tinc host files
+  ansible.builtin.command: ls /etc/tinc/{{ tinc__netname }}/hosts/
+  register: tinc__host_files
+  changed_when: false
+  check_mode: false
+
+- name: Remove obsolete tinc host files
+  ansible.builtin.file:
+    path: /etc/tinc/{{ tinc__netname }}/hosts/{{ item }}
+    state: absent
+  with_items: '{{ tinc__host_files.stdout_lines }}'
+  when: >-
+    item not in tinc__hostvars or tinc__hostvars[item].tinc__remove
+
+- name: Fetch tinc hosts file after key creation
+  ansible.builtin.fetch:
+    src: /etc/tinc/{{ tinc__netname }}/hosts/{{ inventory_hostname }}
+    dest: fetch/{{ tinc__netname }}/{{ inventory_hostname }}
+    flat: true
+
+- name: Create tinc hosts file for hosts outside of ansible
+  ansible.builtin.copy:
+    dest: /etc/tinc/{{ item.value.tinc__netname }}/hosts/{{ item.key }}
+    content: '{{ item.value.tinc__host_conf }}'
+    mode: '0644'
+  with_dict: '{{ tinc__external_hosts }}'
+  when: >-
+    item.value.tinc__host_conf is defined and
+    item.value.tinc__netname is defined
+
+- name: Sync the fetched tinc hosts files on each host
+  ansible.builtin.copy:
+    src: fetch/{{ tinc__netname }}/
+    dest: /etc/tinc/{{ tinc__netname }}/hosts/
+    mode: '0644'
+  notify:
+    - reload tinc
+
+- name: Ensure tinc meta-service is started
+  ansible.builtin.service:
+    name: tinc
+    enabled: true
+    state: started
+  when: tinc__use_systemd
+
+- name: Ensure tinc is started
+  ansible.builtin.service:
+    name: '{{ tinc__service_name }}'
+    enabled: true
+    state: started
+
+- name: Install ferm configuration
+  ansible.builtin.template:
+    src: ferm.conf.j2
+    dest: /etc/ferm/ferm.d/tinc.conf
+    owner: root
+    group: adm
+    mode: '0644'
+  notify: reload ferm
+  when: tinc__install_ferm_svc and tinc__allow_incoming_connections

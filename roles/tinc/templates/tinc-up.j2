@@ -1,0 +1,7 @@
+#!/bin/sh
+# {{ ansible_managed }}
+
+{{ tinc__iproute2_path }} link set dev {{ tinc__vpn_interface }} up
+{% for ADDR in tinc__vpn_addresses %}
+{{ tinc__iproute2_path }} addr add dev {{ tinc__vpn_interface }} {{ ADDR }}
+{% endfor %}

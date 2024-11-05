@@ -1,0 +1,35 @@
+# vim:ts=2:sw=2:et:ai:sts=2
+---
+# TODO: fix line length and remove disable/enable
+# yamllint disable rule:line-length
+tinc__hostvars: >-
+  {{ dict(hostvars) | combine(tinc__external_hosts) | dict2items | json_query(
+  '[?value.tinc__vpn_addresses].{
+    "key": key,
+    "value": {
+      "tinc__host": key,
+      "tinc__public_addresses": value.tinc__public_addresses || [value.ansible_host],
+      "tinc__vpn_addresses": value.tinc__vpn_addresses,
+      "tinc__allow_incoming_connections": value.tinc__allow_incoming_connections,
+      "tinc__remove": value.tinc__remove,
+      "tinc__netname": value.tinc__netname
+      }
+    }
+  ') | items2dict
+  }}
+
+# yamllint enable rule:line-length
+tinc__other_public_addresses: >-
+  {{
+    tinc__hostvars.values() |
+    selectattr('tinc__host', 'ne', inventory_hostname) |
+    selectattr('tinc__public_addresses', 'defined') |
+    map(attribute='tinc__public_addresses') |
+    sort |
+    sum(start=[])
+   }}
+
+tinc__use_systemd: >-
+  {{ (ansible_service_mgr | d()) == "systemd" }}
+tinc__service_name: >-
+  {{ "tinc@" + tinc__netname if tinc__use_systemd else "tinc" }}

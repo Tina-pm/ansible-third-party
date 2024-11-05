@@ -1,0 +1,8 @@
+#!/bin/bash
+# vim:ts=4:sw=4:et:ai:sts=4
+
+echo "subnet-up for $NODE/$NETNAME" >&2
+
+if [ "$NODE" != "$NAME" ]; then
+    {{ tinc__iproute2_path }} route add $SUBNET dev $INTERFACE
+fi

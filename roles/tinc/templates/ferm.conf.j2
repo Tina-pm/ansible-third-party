@@ -1,0 +1,10 @@
+# {{ ansible_managed }}
+{% with -%}
+{% set saddr = tinc__other_public_addresses %}
+{% set saddr = saddr if saddr is string else saddr | join(' ') %}
+domain (ip ip6) table filter chain INPUT {
+    proto tcp
+    saddr @ipfilter(({{ saddr }}))
+    dport {{ tinc__port }} ACCEPT;
+}
+{%- endwith %}

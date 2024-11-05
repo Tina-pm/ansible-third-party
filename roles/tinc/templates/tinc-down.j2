@@ -1,0 +1,7 @@
+#!/bin/sh
+# {{ ansible_managed }}
+
+{% for ADDR in tinc__vpn_addresses %}
+{{ tinc__iproute2_path }} addr del dev {{ tinc__vpn_interface }} {{ ADDR }}
+{% endfor %}
+{{ tinc__iproute2_path }} link set dev {{ tinc__vpn_interface }} down
