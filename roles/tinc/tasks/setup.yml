@@ -24,7 +24,7 @@
     insertbefore: BOF
     create: false
   notify:
-    - restart tinc
+    - Restart tinc
 
 - name: Ensure tinc network directory exists
   ansible.builtin.file:
@@ -39,7 +39,7 @@
     mode: '0644'
     create: true
   notify:
-    - restart tinc
+    - Restart tinc
   when: not tinc__use_systemd
 
 - name: Create tinc.conf file from template
@@ -48,7 +48,7 @@
     dest: /etc/tinc/{{ tinc__netname }}/tinc.conf
     mode: '0644'
   notify:
-    - reload tinc
+    - Reload tinc
 
 - name: Create network configuration scripts
   ansible.builtin.template:
@@ -61,7 +61,7 @@
     - subnet-up
     - subnet-down
   notify:
-    - restart tinc
+    - Restart tinc
 
 - name: Check for crypto key pair
   ansible.builtin.command: >-
@@ -79,7 +79,7 @@
     dest: /etc/tinc/{{ tinc__netname }}/hosts/{{ inventory_hostname }}
     mode: '0644'
   notify:
-    - restart tinc
+    - Restart tinc
 
 # this is necessary because the public key will not be generated
 # (non-interactively) if the private key already exists
@@ -89,7 +89,7 @@
     state: absent
   when: tinc__public_key.changed
   notify:
-    - restart tinc
+    - Restart tinc
 
 - name: Delete private key and regenerate keypair  # noqa: no-handler
   ansible.builtin.command: tincd -n {{ tinc__netname }} -K4096
@@ -97,7 +97,7 @@
     creates: /etc/tinc/{{ tinc__netname }}/rsa_key.priv
   when: tinc__public_key.changed
   notify:
-    - restart tinc
+    - Restart tinc
 
 - name: Find obsolete tinc host files
   ansible.builtin.command: ls /etc/tinc/{{ tinc__netname }}/hosts/
@@ -135,7 +135,7 @@
     dest: /etc/tinc/{{ tinc__netname }}/hosts/
     mode: '0644'
   notify:
-    - reload tinc
+    - Reload tinc
 
 - name: Ensure tinc meta-service is started
   ansible.builtin.service:
@@ -157,5 +157,6 @@
     owner: root
     group: adm
     mode: '0644'
-  notify: reload ferm
+  notify:
+    - Reload ferm
   when: tinc__install_ferm_svc and tinc__allow_incoming_connections

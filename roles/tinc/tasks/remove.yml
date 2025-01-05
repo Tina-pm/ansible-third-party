@@ -33,7 +33,7 @@
     path: /etc/systemd/system/{{ tinc__service_name }}.service.d/override.conf
     state: absent
   notify:
-    - reload systemd
+    - Reload systemd
   when: tinc__use_systemd
 
 - name: Delete local configuration copy
