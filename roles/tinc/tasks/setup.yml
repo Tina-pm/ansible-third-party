@@ -116,7 +116,8 @@
 - name: Fetch tinc hosts file after key creation
   ansible.builtin.fetch:
     src: /etc/tinc/{{ tinc__netname }}/hosts/{{ inventory_hostname }}
-    dest: fetch/{{ tinc__netname }}/{{ inventory_hostname }}
+    dest: |-
+      {{ tinc__local_cache }}/{{ tinc__netname }}/{{ inventory_hostname }}
     flat: true
 
 - name: Create tinc hosts file for hosts outside of ansible
@@ -131,7 +132,7 @@
 
 - name: Sync the fetched tinc hosts files on each host
   ansible.builtin.copy:
-    src: fetch/{{ tinc__netname }}/
+    src: '{{ tinc__local_cache }}/{{ tinc__netname }}/'
     dest: /etc/tinc/{{ tinc__netname }}/hosts/
     mode: '0644'
   notify:

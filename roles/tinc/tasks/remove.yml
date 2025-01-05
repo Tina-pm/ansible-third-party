@@ -38,6 +38,7 @@
 
 - name: Delete local configuration copy
   ansible.builtin.file:
-    path: fetch/{{ tinc__netname }}/{{ inventory_hostname }}
+    path: |-
+      {{ tinc__local_cache }}/{{ tinc__netname }}/{{ inventory_hostname }}
     state: absent
   delegate_to: localhost
