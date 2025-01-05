@@ -45,3 +45,6 @@ tinc__install_ferm_svc: false
 
 # Command paths.
 tinc__iproute2_path: /usr/bin/ip
+
+# Local path to cache host configurations.
+tinc__local_cache: fetch
