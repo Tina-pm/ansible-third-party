@@ -4,5 +4,5 @@
 echo "subnet-up for $NODE/$NETNAME" >&2
 
 if [ "$NODE" != "$NAME" ]; then
-    {{ tinc__iproute2_path }} route add $SUBNET dev $INTERFACE
+    {{ tinc__iproute2_path }} route add $SUBNET dev $INTERFACE metric 1000
 fi

@@ -1,7 +1,7 @@
 # {{ ansible_managed }}
 Name = {{ inventory_hostname }}
-#AddressFamily = ipv4
 Interface = {{ tinc__vpn_interface }}
+Port = {{ tinc__port }}
 {% for host, config in tinc__hostvars | dictsort %}
 {% if inventory_hostname != host and (
         config.tinc__allow_incoming_connections
