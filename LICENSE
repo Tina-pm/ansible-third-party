@@ -21,6 +21,11 @@ License: AFL-3.0
 Copyright: 2015-2025 The Galaxy Project
 Comment: https://github.com/galaxyproject/ansible-postgresql
 
+Files: roles/postgresql_objects/*
+License: MIT
+Copyright: 2014-2025 The Galaxy Project
+Comment: https://github.com/galaxyproject/ansible-postgresql-objects
+
 Files: roles/resolv/*
 License: MIT
 Copyright: 2016 Andrew J Huffman

@@ -5,6 +5,7 @@ exclude_paths:
   - roles/libvirt_vm
   - roles/ntp
   - roles/postgresql
+  - roles/postgresql_objects
   - roles/resolv
 skip_list:
   - meta-runtime[unsupported-version]  # 2.14 deemed too old by ansible-lint
