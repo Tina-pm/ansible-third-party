@@ -34,8 +34,12 @@ tinc__vpn_interface: '{{ tinc__netname }}'
 tinc__vpn_addresses: []
 
 # Export the local IP addresses as single-host networks.
-tinc__vpn_local_subnets:
-  '{{ tinc__vpn_addresses | ipaddr("address") | ipaddr("host") }}'
+tinc__vpn_local_subnets: |-
+  {{
+    tinc__vpn_addresses |
+    ansible.utils.ipaddr('address') |
+    ansible.utils.ipaddr('host')
+  }}
 
 # Extra networks to export.
 tinc__vpn_extra_subnets:
