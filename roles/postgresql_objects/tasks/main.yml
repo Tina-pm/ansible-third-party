@@ -12,7 +12,6 @@
 
 - name: Revoke extra privileges
   community.postgresql.postgresql_privs:
-    database: "{{ item.database }}"
     roles: "{{ item.roles }}"
     type: "{{ item.type | default(omit) }}"
     objs: "{{ item.objs | default(omit) }}"
@@ -20,6 +19,7 @@
     schema: "{{ item.schema | default(omit) }}"
     grant_option: "{{ item.grant_option | default(omit) }}"
     state: "{{ item.state | default(omit) }}"
+    login_db: "{{ item.database }}"
     login_host: "{{ postgresql_objects_login_host | default(omit) }}"
     login_user: "{{ postgresql_objects_login_user | default(omit) }}"
     login_password: "{{ postgresql_objects_login_password | default(omit) }}"
@@ -131,7 +131,6 @@
 
 - name: Grant extra privileges
   community.postgresql.postgresql_privs:
-    database: "{{ item.database | default(omit) }}"
     roles: "{{ item.roles }}"
     type: "{{ item.type | default(omit) }}"
     objs: "{{ item.objs | default(omit) }}"
@@ -139,6 +138,7 @@
     schema: "{{ item.schema | default(omit) }}"
     grant_option: "{{ item.grant_option | default(omit) }}"
     state: "{{ item.state | default(omit) }}"
+    login_db: "{{ item.database | default(omit) }}"
     login_host: "{{ postgresql_objects_login_host | default(omit) }}"
     login_user: "{{ postgresql_objects_login_user | default(omit) }}"
     login_password: "{{ postgresql_objects_login_password | default(omit) }}"
