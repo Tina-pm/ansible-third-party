@@ -129,6 +129,23 @@
   loop_control:
     label: "{{ item.name }}"
 
+- name: Create and drop extensions
+  community.postgresql.postgresql_ext:
+    name: "{{ item.name }}"
+    state: "{{ item.state | default(omit) }}"
+    cascade: "{{ item.cascade | default(omit) }}"
+    comment: "{{ item.comment | default(omit) }}"
+    schema: "{{ item.schema | default(omit) }}"
+    version: "{{ item.version | default(omit) }}"
+    login_db: "{{ item.database }}"
+    login_host: "{{ postgresql_objects_login_host | default(omit) }}"
+    login_user: "{{ postgresql_objects_login_user | default(omit) }}"
+    login_password: "{{ postgresql_objects_login_password | default(omit) }}"
+    login_port: "{{ postgresql_objects_port | default(omit) }}"
+  loop: "{{ postgresql_objects_extensions }}"
+  loop_control:
+    label: "{{ item.name }}"
+
 - name: Grant extra privileges
   community.postgresql.postgresql_privs:
     roles: "{{ item.roles }}"
