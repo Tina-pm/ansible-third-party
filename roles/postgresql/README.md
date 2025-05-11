@@ -89,6 +89,8 @@ Role Variables
   that Ansible is using on the remote side. This allows for the use of the `postgresql_*` Ansible modules (perhaps via
   [galaxyproject.postgresql_objects][postgresql_objects]), which depend on psycopg2. Defaults to `true`.
 
+- `postgresql_install_extra`: List of other packages to install, for example database extensions and the like.
+
 ### Backups ###
 
 This role can deploy and schedule the configuration and scripts to maintain Postgresql [PITR][postgresql_pitr] backups.

@@ -9,6 +9,7 @@ postgresql_default_version: 15
 postgresql_user_name: postgres
 
 postgresql_install_psycopg2: true
+postgresql_install_extra: []
 
 # Point-In-Time Recovery (PITR) backup options
 #   https://www.postgresql.org/docs/current/continuous-archiving.html
