@@ -6,8 +6,9 @@ PostgreSQL Objects
 
 PostgreSQL Objects is an [Ansible][ansible] role for managing PostgreSQL users,
 groups databases, and privileges. It is a small wrapper around the
-[`postgresql_user`][pguser], [`postgresql_db`][pgdb], [`postgresql_ext`][pgext],
-and [`postgresql_privs`][pgprivs] standard modules provided with Ansible. Many
+[`postgresql_user`][pguser], [`postgresql_db`][pgdb],
+[`postgresql_schema`][pgschema], [`postgresql_ext`][pgext], and
+[`postgresql_privs`][pgprivs] standard modules provided with Ansible. Many
 PostgreSQL roles exist in [Ansible Galaxy][ansiblegalaxy] but none exist for
 only managing database objects without managing the server installation and
 configuration. For that, see [galaxyproject.postgresql][gxpostgresql].
@@ -15,6 +16,7 @@ configuration. For that, see [galaxyproject.postgresql][gxpostgresql].
 [ansible]: http://www.ansible.com
 [pguser]: https://docs.ansible.com/ansible/latest/collections/community/postgresql/postgresql_user_module.html
 [pgdb]: https://docs.ansible.com/ansible/latest/collections/community/postgresql/postgresql_db_module.html
+[pgschema]: https://docs.ansible.com/ansible/latest/collections/community/postgresql/postgresql_schema_module.html
 [pgext]: https://docs.ansible.com/ansible/latest/collections/community/postgresql/postgresql_ext_module.html
 [pgprivs]: https://docs.ansible.com/ansible/latest/collections/community/postgresql/postgresql_privs_module.html
 [ansiblegalaxy]: https://galaxy.ansible.com
@@ -65,6 +67,9 @@ Objects are configured via the following variables:
   values are either `present` (default) or `absent`).
 - `postgresql_objects_databases`: A list of databases to create or drop. List
   items are dictionaries, keys match the [`postgresql_db`][pgdb] module
+  parameters.
+- `postgresql_objects_schemas`: A list of schemas to create or drop. List
+  items are dictionaries, keys match the [`postgresql_schema`][pgschema] module
   parameters.
 - `postgresql_objects_extensions`: A list of extensions to create or drop. List
   items are dictionaries, keys match the [`postgresql_ext`][pgext] module
