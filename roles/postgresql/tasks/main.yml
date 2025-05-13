@@ -29,6 +29,12 @@
 - include_tasks: redhat.yml
   when: ansible_os_family == "RedHat"
 
+- name: Install extra packages
+  package:
+    name: "{{ item }}"
+    state: present
+  loop: "{{ postgresql_install_extra }}"
+
 - name: Create conf.d
   file:
     path: "{{ postgresql_conf_dir }}/conf.d"
