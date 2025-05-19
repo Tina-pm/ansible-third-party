@@ -180,3 +180,19 @@
   when: (item.state | default('present')) == 'present'
   loop_control:
     label: "{{ item.roles }}"
+
+- name: Run arbitrary queries
+  community.postgresql.postgresql_query:
+    query: '{{ item.query | default(omit) }}'
+    named_args: '{{ item.named_args | default(omit) }}'
+    positional_args: '{{ item.positional_args | default(omit) }}'
+    autocommit: '{{ item.autocommit | default(omit) }}'
+    search_path: '{{ item.search_path | default(omit) }}'
+    login_db: '{{ item.database | default(omit) }}'
+    login_host: '{{ postgresql_objects_login_host | default(omit) }}'
+    login_user: '{{ postgresql_objects_login_user | default(omit) }}'
+    login_password: '{{ postgresql_objects_login_password | default(omit) }}'
+    login_port: '{{ postgresql_objects_port | default(omit) }}'
+  loop: '{{ postgresql_objects_queries }}'
+  loop_control:
+    label: '{{ item.comment | default(item.query[:20]) }}'

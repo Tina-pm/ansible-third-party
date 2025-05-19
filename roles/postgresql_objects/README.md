@@ -7,8 +7,9 @@ PostgreSQL Objects
 PostgreSQL Objects is an [Ansible][ansible] role for managing PostgreSQL users,
 groups databases, and privileges. It is a small wrapper around the
 [`postgresql_user`][pguser], [`postgresql_db`][pgdb],
-[`postgresql_schema`][pgschema], [`postgresql_ext`][pgext], and
-[`postgresql_privs`][pgprivs] standard modules provided with Ansible. Many
+[`postgresql_schema`][pgschema], [`postgresql_ext`][pgext],
+[`postgresql_privs`][pgprivs], and [`postgresql_query`][pgquery]
+standard modules provided with Ansible. Many
 PostgreSQL roles exist in [Ansible Galaxy][ansiblegalaxy] but none exist for
 only managing database objects without managing the server installation and
 configuration. For that, see [galaxyproject.postgresql][gxpostgresql].
@@ -19,6 +20,7 @@ configuration. For that, see [galaxyproject.postgresql][gxpostgresql].
 [pgschema]: https://docs.ansible.com/ansible/latest/collections/community/postgresql/postgresql_schema_module.html
 [pgext]: https://docs.ansible.com/ansible/latest/collections/community/postgresql/postgresql_ext_module.html
 [pgprivs]: https://docs.ansible.com/ansible/latest/collections/community/postgresql/postgresql_privs_module.html
+[pgquery]: https://docs.ansible.com/ansible/latest/collections/community/postgresql/postgresql_query_module.html
 [ansiblegalaxy]: https://galaxy.ansible.com
 [gxpostgresql]: https://github.com/galaxyproject/ansible-postgresql/
 
@@ -76,6 +78,10 @@ Objects are configured via the following variables:
   parameters.
 - `postgresql_objects_privileges`: A list of privileges to grant or revoke.
   List items are dictionaries, keys match the [`postgresql_privs`][pgprivs]
+  module parameters.
+- `postgresql_objects_queries`: A list of abritrary queries to execute, allowing
+  to perform more complex adjustments.
+  List items are dictionaries, keys match the [`postgresql_query`][pgquery]
   module parameters.
 - `postgresql_objects_ignore_revoke_failure`: True or false. Revoking
   privileges from a nonexistent user, database, or table would normally cause a
