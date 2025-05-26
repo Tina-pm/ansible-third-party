@@ -3,15 +3,16 @@
 - name: Verify
   hosts: all
   become: true
-  become_method: su
+  become_method: ansible.builtin.su
   become_user: postgres
   tasks:
-    - block:
-
+    - name: Run tests
+      check_mode: true
+      block:
         - name: Check users and groups
           community.postgresql.postgresql_user:
-            name: "{{ item.name }}"
-            state: "{{ item.state | default('present') }}"
+            name: '{{ item.name }}'
+            state: '{{ item.state | default("present") }}'
           loop:
             - name: alice
             - name: bob
@@ -29,9 +30,9 @@
 
         - name: Check group membership
           community.postgresql.postgresql_membership:
-            group: "{{ item.name }}"
-            target_roles: "{{ item.users }}"
-            state: "{{ item.state | default('present') }}"
+            group: '{{ item.name }}'
+            target_roles: '{{ item.users }}'
+            state: '{{ item.state | default("present") }}'
           loop:
             - name: friends
               users:
@@ -51,9 +52,9 @@
 
         - name: Check databases
           community.postgresql.postgresql_db:
-            name: "{{ item.name }}"
-            owner: "{{ item.owner | default(omit) }}"
-            state: "{{ item.state | default('present') }}"
+            name: '{{ item.name }}'
+            owner: '{{ item.owner | default(omit) }}'
+            state: '{{ item.state | default("present") }}'
           loop:
             - name: alicedb
               owner: alice
@@ -66,12 +67,12 @@
 
         - name: Check extra privs
           community.postgresql.postgresql_privs:
-            database: "{{ item.database }}"
-            roles: "{{ item.roles }}"
-            objs: "{{ item.objs }}"
-            type: "{{ item.type }}"
-            privs: "{{ item.privs }}"
-            state: "{{ item.state | default('present') }}"
+            database: '{{ item.database }}'
+            roles: '{{ item.roles }}'
+            objs: '{{ item.objs }}'
+            type: '{{ item.type }}'
+            privs: '{{ item.privs }}'
+            state: '{{ item.state | default("present") }}'
           loop:
             - database: alicedb
               roles: bob
@@ -80,5 +81,3 @@
               privs: SELECT
           register: result
           failed_when: result is changed
-
-      check_mode: true

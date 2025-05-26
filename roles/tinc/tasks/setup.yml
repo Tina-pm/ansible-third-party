@@ -19,8 +19,10 @@
 - name: Set daemon parameters in /etc/default/tinc
   ansible.builtin.lineinfile:
     dest: /etc/default/tinc
-    line: EXTRA='-d -L'
-    regexp: '^EXTRA\s*='
+    line: >-
+      EXTRA='-d -L'
+    regexp: >-
+      ^EXTRA\s*=
     insertbefore: BOF
     create: false
   notify:
