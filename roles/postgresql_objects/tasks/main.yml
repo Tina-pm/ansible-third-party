@@ -1,166 +1,228 @@
 ---
 
 # Fail is used here to make the message stand out (red)
-- name: Warn if deprecated user priv param is set
+- name: # noqa: ignore-errors
+    Warn if deprecated user priv param is set
   ansible.builtin.fail:
-    msg: "Support for the deprecated `priv` param to postgresql_objects_users has been removed, please use postgresql_objects_privileges instead"
-  loop: "{{ postgresql_objects_users }}"
+    msg:
+      Support for the deprecated `priv` param to postgresql_objects_users has
+      been removed, please use postgresql_objects_privileges instead"
+  loop: '{{ postgresql_objects_users }}'
   loop_control:
-    label: "{{ item.name }}"
+    label: '{{ item.name }}'
   when: item.priv is defined
   ignore_errors: true
 
 - name: Revoke extra privileges
   community.postgresql.postgresql_privs:
-    roles: "{{ item.roles }}"
-    type: "{{ item.type | default(omit) }}"
-    objs: "{{ item.objs | default(omit) }}"
-    privs: "{{ item.privs | default(omit) }}"
-    schema: "{{ item.schema | default(omit) }}"
-    grant_option: "{{ item.grant_option | default(omit) }}"
-    state: "{{ item.state | default(omit) }}"
-    login_db: "{{ item.database }}"
-    login_host: "{{ postgresql_objects_login_host | default(omit) }}"
-    login_user: "{{ postgresql_objects_login_user | default(omit) }}"
-    login_password: "{{ postgresql_objects_login_password | default(omit) }}"
-    login_port: "{{ postgresql_objects_port | default(omit) }}"
-  loop: "{{ postgresql_objects_privileges }}"
+    roles: '{{ item.roles | mandatory }}'
+    target_roles: '{{ item.target_roles | default(omit) }}'
+    type: '{{ item.type | default(omit) }}'
+    objs: '{{ item.objs | default(omit) }}'
+    privs: '{{ item.privs | default(omit) }}'
+    schema: '{{ item.schema | default(omit) }}'
+    grant_option: '{{ item.grant_option | default(omit) }}'
+    fail_on_role: |-
+      {{ item.fail_on_role |
+        default(not postgresql_objects_ignore_revoke_failure) }}
+    state: '{{ item.state | default(omit) }}'
+    login_db: '{{ item.login_db | d(item.database) | mandatory }}'
+    login_host: '{{ postgresql_objects_login_host | default(omit) }}'
+    login_user: '{{ postgresql_objects_login_user | default(omit) }}'
+    login_password: '{{ postgresql_objects_login_password | default(omit) }}'
+    login_port: '{{ postgresql_objects_port | default(omit) }}'
+  loop: '{{ postgresql_objects_privileges }}'
   register: revoke
-  failed_when: >-
-    revoke is failed and (
-      not postgresql_objects_ignore_revoke_failure or (
-        postgresql_objects_ignore_revoke_failure and (
-          ('does not exist' not in revoke.msg) or (',' in item.roles)
-        )
-      )
-    )
   when: (item.state | default('present')) == 'absent'
 
 # Drop databases first so later user drop can succeed
 - name: Drop databases
   community.postgresql.postgresql_db:
-    name: "{{ item.name }}"
-    owner: "{{ item.owner | default(omit) }}"
-    template: "{{ item.template | default(omit) }}"
-    encoding: "{{ item.encoding | default(omit) }}"
-    lc_collate: "{{ item.lc_collate | default(omit) }}"
-    lc_ctype: "{{ item.lc_ctype | default(omit) }}"
-    state: "{{ item.state }}"
-    login_host: "{{ postgresql_objects_login_host | default(omit) }}"
-    login_user: "{{ postgresql_objects_login_user | default(omit) }}"
-    login_password: "{{ postgresql_objects_login_password | default(omit) }}"
-    login_port: "{{ postgresql_objects_port | default(omit) }}"
-  loop: "{{ postgresql_objects_databases }}"
+    name: '{{ item.name | default(item.db) | mandatory }}'
+    force: '{{ item.owner | default(omit) }}'
+    state: '{{ item.state }}'
+    maintenance_db: |-
+      {{ item.maintenance_db | default(item.login_db) | default(omit) }}
+    login_host: '{{ postgresql_objects_login_host | default(omit) }}'
+    login_user: '{{ postgresql_objects_login_user | default(omit) }}'
+    login_password: '{{ postgresql_objects_login_password | default(omit) }}'
+    login_port: '{{ postgresql_objects_port | default(omit) }}'
+  loop: '{{ postgresql_objects_databases }}'
   when: (item.state | default('present')) == 'absent'
 
 - name: Create and drop users
   community.postgresql.postgresql_user:
-    name: "{{ item.name }}"
-    password: "{{ item.password | default(omit) }}"
-    role_attr_flags: "{{ item.role_attr_flags | default(omit) }}"
-    encrypted: "{{ item.encrypted | default(omit) }}"
-    state: "{{ item.state | default(omit) }}"
-    login_host: "{{ postgresql_objects_login_host | default(omit) }}"
-    login_user: "{{ postgresql_objects_login_user | default(omit) }}"
-    login_password: "{{ postgresql_objects_login_password | default(omit) }}"
-    login_port: "{{ postgresql_objects_port | default(omit) }}"
-  loop: "{{ postgresql_objects_users }}"
+    name: '{{ item.name }}'
+    password: '{{ item.password | default(omit) }}'
+    role_attr_flags: '{{ item.role_attr_flags | default(omit) }}'
+    encrypted: '{{ item.encrypted | default(omit) }}'
+    state: '{{ item.state | default(omit) }}'
+    no_password_changes: '{{ item.no_password_changes | default(omit) }}'
+    expires: '{{ item.expires | default(omit) }}'
+    conn_limit: '{{ item.conn_limit | default(omit) }}'
+    comment: '{{ item.comment | default(omit) }}'
+    configuration: '{{ item.configuration | default(omit) }}'
+    reset_unspecified_configuration: |-
+      {{ item.reset_unspecified_configuration | default(omit) }}
+    quote_configuration_values: |-
+      {{ item.quote_configuration_values | default(omit) }}
+    login_db: '{{ postgresql_objects_login_db | default(omit) }}'
+    login_host: '{{ postgresql_objects_login_host | default(omit) }}'
+    login_user: '{{ postgresql_objects_login_user | default(omit) }}'
+    login_password: '{{ postgresql_objects_login_password | default(omit) }}'
+    login_port: '{{ postgresql_objects_port | default(omit) }}'
+  loop: '{{ postgresql_objects_users }}'
   loop_control:
-    label: "{{ item.name }}"
+    label: '{{ item.name }}'
 
 - name: Create groups
   community.postgresql.postgresql_user:
-    name: "{{ item.name }}"
-    password: "{{ item.password | default(omit) }}"
-    role_attr_flags: "{{ item.role_attr_flags | default(omit) }}"
-    encrypted: "{{ item.encrypted | default(omit) }}"
-    login_host: "{{ postgresql_objects_login_host | default(omit) }}"
-    login_user: "{{ postgresql_objects_login_user | default(omit) }}"
-    login_password: "{{ postgresql_objects_login_password | default(omit) }}"
-    login_port: "{{ postgresql_objects_port | default(omit) }}"
-  loop: "{{ postgresql_objects_groups }}"
+    name: '{{ item.name }}'
+    password: '{{ item.password | default(omit) }}'
+    role_attr_flags: '{{ item.role_attr_flags | default("NOLOGIN") }}'
+    encrypted: '{{ item.encrypted | default(omit) }}'
+    no_password_changes: '{{ item.no_password_changes | default(omit) }}'
+    expires: '{{ item.expires | default(omit) }}'
+    conn_limit: '{{ item.conn_limit | default(omit) }}'
+    comment: '{{ item.comment | default(omit) }}'
+    configuration: '{{ item.configuration | default(omit) }}'
+    reset_unspecified_configuration: |-
+      {{ item.reset_unspecified_configuration | default(omit) }}
+    quote_configuration_values: |-
+      {{ item.quote_configuration_values | default(omit) }}
+    login_db: '{{ postgresql_objects_login_db | default(omit) }}'
+    login_host: '{{ postgresql_objects_login_host | default(omit) }}'
+    login_user: '{{ postgresql_objects_login_user | default(omit) }}'
+    login_password: '{{ postgresql_objects_login_password | default(omit) }}'
+    login_port: '{{ postgresql_objects_port | default(omit) }}'
+  loop: '{{ postgresql_objects_groups }}'
   when: (item.state | default('present')) == 'present'
   loop_control:
-    label: "{{ item.name }}"
+    label: '{{ item.name }}'
 
-# this could be done more efficiently if we changed the data structure in a backwards-incompatible way
+# this could be done more efficiently if we changed the data structure in a
+# backwards-incompatible way
 - name: Add or remove users from groups
   community.postgresql.postgresql_membership:
-    group: "{{ item.0.name }}"
-    target_role: "{{ item.1.name }}"
-    state: "{{ item.1.state | default('present') }}"
-    login_host: "{{ postgresql_objects_login_host | default(omit) }}"
-    login_user: "{{ postgresql_objects_login_user | default(omit) }}"
-    login_password: "{{ postgresql_objects_login_password | default(omit) }}"
-    login_port: "{{ postgresql_objects_port | default(omit) }}"
-  loop: "{{ postgresql_objects_groups | subelements('users', skip_missing=True) }}"
+    group: '{{ item.0.name }}'
+    target_role: '{{ item.1.name }}'
+    state: '{{ item.1.state | default("present") }}'
+    login_host: '{{ postgresql_objects_login_host | default(omit) }}'
+    login_user: '{{ postgresql_objects_login_user | default(omit) }}'
+    login_password: '{{ postgresql_objects_login_password | default(omit) }}'
+    login_port: '{{ postgresql_objects_port | default(omit) }}'
+  loop: |-
+    {{ postgresql_objects_groups | subelements('users', skip_missing=True) }}
   when: (item.0.state | default('present')) == 'present'
   loop_control:
-    label: "{{ item.0.name }}: {{ item.1.name }}"
+    label: '{{ item.0.name }}: {{ item.1.name }}'
 
 - name: Drop groups
   community.postgresql.postgresql_user:
-    name: "{{ item.name }}"
-    state: "{{ item.state }}"
-    login_host: "{{ postgresql_objects_login_host | default(omit) }}"
-    login_user: "{{ postgresql_objects_login_user | default(omit) }}"
-    login_password: "{{ postgresql_objects_login_password | default(omit) }}"
-    login_port: "{{ postgresql_objects_port | default(omit) }}"
-  loop: "{{ postgresql_objects_groups }}"
+    name: '{{ item.name }}'
+    state: '{{ item.state }}'
+    login_host: '{{ postgresql_objects_login_host | default(omit) }}'
+    login_user: '{{ postgresql_objects_login_user | default(omit) }}'
+    login_password: '{{ postgresql_objects_login_password | default(omit) }}'
+    login_port: '{{ postgresql_objects_port | default(omit) }}'
+  loop: '{{ postgresql_objects_groups }}'
   when: (item.state | default('present')) == 'absent'
   loop_control:
-    label: "{{ item.name }}"
+    label: '{{ item.name }}'
 
 - name: Create databases
   community.postgresql.postgresql_db:
-    name: "{{ item.name }}"
-    owner: "{{ item.owner | default(omit) }}"
-    template: "{{ item.template | default(omit) }}"
-    encoding: "{{ item.encoding | default(omit) }}"
-    lc_collate: "{{ item.lc_collate | default(omit) }}"
-    lc_ctype: "{{ item.lc_ctype | default(omit) }}"
-    state: "{{ item.state | default(omit) }}"
-    login_host: "{{ postgresql_objects_login_host | default(omit) }}"
-    login_user: "{{ postgresql_objects_login_user | default(omit) }}"
-    login_password: "{{ postgresql_objects_login_password | default(omit) }}"
-    login_port: "{{ postgresql_objects_port | default(omit) }}"
-  loop: "{{ postgresql_objects_databases }}"
+    name: '{{ item.name | default(item.db) | mandatory }}'
+    owner: '{{ item.owner | default(omit) }}'
+    template: '{{ item.template | default(omit) }}'
+    encoding: '{{ item.encoding | default(omit) }}'
+    lc_collate: '{{ item.lc_collate | default(omit) }}'
+    lc_ctype: '{{ item.lc_ctype | default(omit) }}'
+    icu_locale: '{{ item.icu_locale | default(omit) }}'
+    locale_provider: '{{ item.locale_provider | default(omit) }}'
+    state: '{{ item.state | default(omit) }}'
+    conn_limit: '{{ item.conn_limit | default(omit) }}'
+    tablespace: '{{ item.tablespace | default(omit) }}'
+    comment: '{{ item.comment | default(omit) }}'
+    maintenance_db: |-
+      {{ item.maintenance_db | default(item.login_db) | default(omit) }}
+    login_host: '{{ postgresql_objects_login_host | default(omit) }}'
+    login_user: '{{ postgresql_objects_login_user | default(omit) }}'
+    login_password: '{{ postgresql_objects_login_password | default(omit) }}'
+    login_port: '{{ postgresql_objects_port | default(omit) }}'
+  loop: '{{ postgresql_objects_databases }}'
   when: (item.state | default('present')) == 'present'
   loop_control:
-    label: "{{ item.name }}"
+    label: '{{ item.name }}'
+
+- name: Create and drop schemas
+  community.postgresql.postgresql_schema:
+    name: '{{ item.name }}'
+    state: '{{ item.state | default(omit) }}'
+    cascade_drop: '{{ item.cascade_drop | default(omit) }}'
+    comment: '{{ item.comment | default(omit) }}'
+    owner: '{{ item.owner | default(omit) }}'
+    login_db: '{{ item.database }}'
+    login_host: '{{ postgresql_objects_login_host | default(omit) }}'
+    login_user: '{{ postgresql_objects_login_user | default(omit) }}'
+    login_password: '{{ postgresql_objects_login_password | default(omit) }}'
+    login_port: '{{ postgresql_objects_port | default(omit) }}'
+  loop: '{{ postgresql_objects_schemas }}'
+  loop_control:
+    label: '{{ item.name }}'
 
 - name: Create and drop extensions
   community.postgresql.postgresql_ext:
-    name: "{{ item.name }}"
-    state: "{{ item.state | default(omit) }}"
-    cascade: "{{ item.cascade | default(omit) }}"
-    comment: "{{ item.comment | default(omit) }}"
-    schema: "{{ item.schema | default(omit) }}"
-    version: "{{ item.version | default(omit) }}"
-    login_db: "{{ item.database }}"
-    login_host: "{{ postgresql_objects_login_host | default(omit) }}"
-    login_user: "{{ postgresql_objects_login_user | default(omit) }}"
-    login_password: "{{ postgresql_objects_login_password | default(omit) }}"
-    login_port: "{{ postgresql_objects_port | default(omit) }}"
-  loop: "{{ postgresql_objects_extensions }}"
+    name: '{{ item.name }}'
+    state: '{{ item.state | default(omit) }}'
+    cascade: '{{ item.cascade | default(omit) }}'
+    comment: '{{ item.comment | default(omit) }}'
+    schema: '{{ item.schema | default(omit) }}'
+    version: '{{ item.version | default(omit) }}'
+    login_db: '{{ item.database }}'
+    login_host: '{{ postgresql_objects_login_host | default(omit) }}'
+    login_user: '{{ postgresql_objects_login_user | default(omit) }}'
+    login_password: '{{ postgresql_objects_login_password | default(omit) }}'
+    login_port: '{{ postgresql_objects_port | default(omit) }}'
+  loop: '{{ postgresql_objects_extensions }}'
   loop_control:
-    label: "{{ item.name }}"
+    label: '{{ item.name }}'
 
 - name: Grant extra privileges
   community.postgresql.postgresql_privs:
-    roles: "{{ item.roles }}"
-    type: "{{ item.type | default(omit) }}"
-    objs: "{{ item.objs | default(omit) }}"
-    privs: "{{ item.privs | default(omit) }}"
-    schema: "{{ item.schema | default(omit) }}"
-    grant_option: "{{ item.grant_option | default(omit) }}"
-    state: "{{ item.state | default(omit) }}"
-    login_db: "{{ item.database | default(omit) }}"
-    login_host: "{{ postgresql_objects_login_host | default(omit) }}"
-    login_user: "{{ postgresql_objects_login_user | default(omit) }}"
-    login_password: "{{ postgresql_objects_login_password | default(omit) }}"
-    login_port: "{{ postgresql_objects_port | default(omit) }}"
-  loop: "{{ postgresql_objects_privileges }}"
+    roles: '{{ item.roles | mandatory }}'
+    target_roles: '{{ item.target_roles | default(omit) }}'
+    type: '{{ item.type | default(omit) }}'
+    objs: '{{ item.objs | default(omit) }}'
+    privs: '{{ item.privs | default(omit) }}'
+    schema: '{{ item.schema | default(omit) }}'
+    grant_option: '{{ item.grant_option | default(omit) }}'
+    fail_on_role: |-
+      {{ item.fail_on_role |
+        default(not postgresql_objects_ignore_revoke_failure) }}
+    state: '{{ item.state | default(omit) }}'
+    login_db: '{{ item.login_db | d(item.database) | mandatory }}'
+    login_host: '{{ postgresql_objects_login_host | default(omit) }}'
+    login_user: '{{ postgresql_objects_login_user | default(omit) }}'
+    login_password: '{{ postgresql_objects_login_password | default(omit) }}'
+    login_port: '{{ postgresql_objects_port | default(omit) }}'
+  loop: '{{ postgresql_objects_privileges }}'
   when: (item.state | default('present')) == 'present'
   loop_control:
-    label: "{{ item.roles }}"
+    label: '{{ item.roles }}'
+
+- name: Run arbitrary queries
+  community.postgresql.postgresql_query:
+    query: '{{ item.query | default(omit) }}'
+    named_args: '{{ item.named_args | default(omit) }}'
+    positional_args: '{{ item.positional_args | default(omit) }}'
+    autocommit: '{{ item.autocommit | default(omit) }}'
+    search_path: '{{ item.search_path | default(omit) }}'
+    login_db: '{{ item.database | default(omit) }}'
+    login_host: '{{ postgresql_objects_login_host | default(omit) }}'
+    login_user: '{{ postgresql_objects_login_user | default(omit) }}'
+    login_password: '{{ postgresql_objects_login_password | default(omit) }}'
+    login_port: '{{ postgresql_objects_port | default(omit) }}'
+  loop: '{{ postgresql_objects_queries }}'
+  loop_control:
+    label: '{{ item.comment | default(item.query[:20]) }}'

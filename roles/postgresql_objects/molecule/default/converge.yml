@@ -2,15 +2,15 @@
 - name: Converge
   hosts: all
   become: true
-  become_method: su
+  become_method: ansible.builtin.su
   become_user: postgres
   roles:
 
     # ensure the role runs if no objects are specified
-    - role: galaxyproject.postgresql_objects
+    - role: tina_pm.third_party.postgresql_objects
 
     # create some stuff, must pass idempotence
-    - role: galaxyproject.postgresql_objects
+    - role: tina_pm.third_party.postgresql_objects
       postgresql_objects_users:
         - name: alice
         - name: bob
