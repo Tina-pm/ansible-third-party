@@ -46,14 +46,16 @@ _tinc_connect_to: >-
     map(attribute='0')
   }}
 
-_tinc_other_public_addresses: >-
+_tinc_ferm_allow_from: >-
   {{
     _tinc_hostvars.items() |
     selectattr('0', 'ne', inventory_hostname) |
     selectattr('1.tinc__public_addresses', 'defined') |
+    selectattr('1.tinc__public_addresses', 'ansible.builtin.truthy') |
+    selectattr('1.tinc__netname', 'eq', tinc__netname) |
     map(attribute='1.tinc__public_addresses') |
-    sort |
-    sum(start=[])
+    sum(start=[]) |
+    sort
    }}
 
 _tinc_service_name: >-

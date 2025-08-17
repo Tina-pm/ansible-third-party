@@ -1,6 +1,6 @@
 # {{ ansible_managed }}
 {% with -%}
-{% set saddr = _tinc_other_public_addresses %}
+{% set saddr = _tinc_ferm_allow_from %}
 {% set saddr = saddr if saddr is string else saddr | join(' ') %}
 domain (ip ip6) table filter chain INPUT {
     proto tcp
