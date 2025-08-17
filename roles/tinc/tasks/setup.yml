@@ -111,8 +111,7 @@
     path: /etc/tinc/{{ tinc__netname }}/hosts/{{ item }}
     state: absent
   with_items: '{{ tinc__host_files.stdout_lines }}'
-  when: >-
-    item not in tinc__hostvars or tinc__hostvars[item].tinc__remove
+  when: item not in _tinc_hosts
 
 - name: Fetch tinc hosts file after key creation
   ansible.builtin.fetch:

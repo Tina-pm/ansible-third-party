@@ -2,13 +2,6 @@
 Name = {{ inventory_hostname }}
 Interface = {{ tinc__vpn_interface }}
 Port = {{ tinc__port }}
-{% for host, config in tinc__hostvars | dictsort %}
-{% if inventory_hostname != host and (
-        config.tinc__allow_incoming_connections
-        if config.tinc__allow_incoming_connections is not none else True) and
-      not config.tinc__remove and
-      tinc__netname == (config.tinc__netname or tinc__netname)
-%}
+{% for host in _tinc_connect_to | sort %}
 ConnectTo = {{ host }}
-{% endif %}
 {% endfor %}

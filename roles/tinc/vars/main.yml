@@ -4,12 +4,21 @@
 _tinc_combined_hostvars: >-
   {{ dict(hostvars) | combine(tinc__external_hosts or {}) }}
 
+_tinc_removed_hosts: >-
+  {{
+    _tinc_combined_hostvars.items() |
+    selectattr('1.tinc__remove', 'defined') |
+    selectattr('1.tinc__remove', 'false') |
+    map(attribute='0')
+  }}
+
 _tinc_hosts: >-
   {{
     _tinc_combined_hostvars.items() |
     selectattr('1.tinc__vpn_addresses', 'defined') |
     selectattr('1.tinc__vpn_addresses', 'ansible.builtin.truthy') |
-    map(attribute='0')
+    map(attribute='0') |
+    ansible.builtin.difference(_tinc_removed_hosts)
   }}
 
 tinc__hostvars: |-
@@ -32,6 +41,15 @@ tinc__hostvars: |-
   {% set ns.result = ns.result | combine({host: conf}) %}
   {% endfor %}
   {{- ns.result }}
+
+_tinc_connect_to: >-
+  {{
+    tinc__hostvars.items() |
+    selectattr('1.tinc__host', 'ne', inventory_hostname) |
+    selectattr('1.tinc__allow_incoming_connections', 'true') |
+    selectattr('1.tinc__netname', 'eq', tinc__netname) |
+    map(attribute='0')
+  }}
 
 tinc__other_public_addresses: >-
   {{
