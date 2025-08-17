@@ -1,24 +1,38 @@
 # vim:ts=2:sw=2:et:ai:sts=2
 ---
-# TODO: fix line length and remove disable/enable
-# yamllint disable rule:line-length
-tinc__hostvars: >-
-  {{ dict(hostvars) | combine(tinc__external_hosts) | dict2items | json_query(
-  '[?value.tinc__vpn_addresses].{
-    "key": key,
-    "value": {
-      "tinc__host": key,
-      "tinc__public_addresses": value.tinc__public_addresses || [value.ansible_host],
-      "tinc__vpn_addresses": value.tinc__vpn_addresses,
-      "tinc__allow_incoming_connections": value.tinc__allow_incoming_connections,
-      "tinc__remove": value.tinc__remove,
-      "tinc__netname": value.tinc__netname
-      }
-    }
-  ') | items2dict
+
+_tinc_combined_hostvars: >-
+  {{ dict(hostvars) | combine(tinc__external_hosts or {}) }}
+
+_tinc_hosts: >-
+  {{
+    _tinc_combined_hostvars.items() |
+    selectattr('1.tinc__vpn_addresses', 'defined') |
+    selectattr('1.tinc__vpn_addresses', 'ansible.builtin.truthy') |
+    map(attribute='0')
   }}
 
-# yamllint enable rule:line-length
+tinc__hostvars: |-
+  {% set ns = namespace(result={}) %}
+  {% for host in _tinc_hosts %}
+  {% set hvars = _tinc_combined_hostvars[host] %}
+  {% set conf = {
+    'tinc__host': host,
+    'tinc__public_addresses':
+      hvars.get('tinc__public_addresses', [hvars.ansible_host]) or [],
+    'tinc__vpn_addresses':
+      hvars.get('tinc__vpn_addresses'),
+    'tinc__allow_incoming_connections':
+      hvars.get('tinc__allow_incoming_connections', True) | bool,
+    'tinc__remove':
+      hvars.get('tinc__remove', False) | bool,
+    'tinc__netname':
+      hvars.get('tinc__netname', 'tinc'),
+  } %}
+  {% set ns.result = ns.result | combine({host: conf}) %}
+  {% endfor %}
+  {{- ns.result }}
+
 tinc__other_public_addresses: >-
   {{
     tinc__hostvars.values() |
