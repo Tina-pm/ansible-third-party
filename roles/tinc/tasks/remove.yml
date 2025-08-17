@@ -8,8 +8,7 @@
 
 - name: Set fact about systemd unit
   ansible.builtin.set_fact:
-    tinc__use_systemd: false
-  when: not tinc__tinc_unit.stat.exists
+    tinc__use_systemd: '{{ tinc__tinc_unit.stat.exists }}'
 
 - name: Stop and disable tinc
   ansible.builtin.service:

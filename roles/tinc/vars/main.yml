@@ -43,7 +43,5 @@ tinc__other_public_addresses: >-
     sum(start=[])
    }}
 
-tinc__use_systemd: >-
-  {{ (ansible_service_mgr | d()) == "systemd" }}
 tinc__service_name: >-
   {{ "tinc@" + tinc__netname if tinc__use_systemd else "tinc" }}
