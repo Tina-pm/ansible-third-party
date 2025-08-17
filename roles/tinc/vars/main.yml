@@ -26,15 +26,10 @@ tinc__hostvars: |-
   {% for host in _tinc_hosts %}
   {% set hvars = _tinc_combined_hostvars[host] %}
   {% set conf = {
-    'tinc__host': host,
     'tinc__public_addresses':
       hvars.get('tinc__public_addresses', [hvars.ansible_host]) or [],
-    'tinc__vpn_addresses':
-      hvars.get('tinc__vpn_addresses'),
     'tinc__allow_incoming_connections':
       hvars.get('tinc__allow_incoming_connections', True) | bool,
-    'tinc__remove':
-      hvars.get('tinc__remove', False) | bool,
     'tinc__netname':
       hvars.get('tinc__netname', 'tinc'),
   } %}
@@ -45,7 +40,7 @@ tinc__hostvars: |-
 _tinc_connect_to: >-
   {{
     tinc__hostvars.items() |
-    selectattr('1.tinc__host', 'ne', inventory_hostname) |
+    selectattr('0', 'ne', inventory_hostname) |
     selectattr('1.tinc__allow_incoming_connections', 'true') |
     selectattr('1.tinc__netname', 'eq', tinc__netname) |
     map(attribute='0')
@@ -54,9 +49,9 @@ _tinc_connect_to: >-
 tinc__other_public_addresses: >-
   {{
     tinc__hostvars.values() |
-    selectattr('tinc__host', 'ne', inventory_hostname) |
-    selectattr('tinc__public_addresses', 'defined') |
-    map(attribute='tinc__public_addresses') |
+    selectattr('0', 'ne', inventory_hostname) |
+    selectattr('1.tinc__public_addresses', 'defined') |
+    map(attribute='1.tinc__public_addresses') |
     sort |
     sum(start=[])
    }}
