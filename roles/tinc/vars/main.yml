@@ -37,7 +37,7 @@ _tinc_hostvars: |-
   {% endfor %}
   {{- ns.result }}
 
-_tinc_connect_to: >-
+_tinc_connect_to_auto: >-
   {{
     _tinc_hostvars.items() |
     selectattr('0', 'ne', inventory_hostname) |
@@ -46,7 +46,10 @@ _tinc_connect_to: >-
     map(attribute='0')
   }}
 
-_tinc_ferm_allow_from: >-
+_tinc_connect_to: >-
+  {{ tinc__connect_to or _tinc_connect_to_auto }}
+
+_tinc_ferm_allow_from_auto: >-
   {{
     _tinc_hostvars.items() |
     selectattr('0', 'ne', inventory_hostname) |
@@ -57,6 +60,9 @@ _tinc_ferm_allow_from: >-
     sum(start=[]) |
     sort
    }}
+
+_tinc_ferm_allow_from: >-
+  {{ tinc__ferm_allow_from or _tinc_ferm_allow_from_auto }}
 
 _tinc_service_name: >-
   {{ "tinc@" + tinc__netname if _tinc_use_systemd else "tinc" }}
