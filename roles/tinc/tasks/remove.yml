@@ -4,15 +4,15 @@
 - name: Check tinc uses systemd units
   ansible.builtin.stat:
     path: /lib/systemd/system/tinc@.service
-  register: tinc__tinc_unit
+  register: _tinc_tinc_unit
 
 - name: Set fact about systemd unit
   ansible.builtin.set_fact:
-    tinc__use_systemd: '{{ tinc__tinc_unit.stat.exists }}'
+    _tinc_use_systemd: '{{ _tinc_tinc_unit.stat.exists }}'
 
 - name: Stop and disable tinc
   ansible.builtin.service:
-    name: '{{ tinc__service_name }}'
+    name: '{{ _tinc_service_name }}'
     enabled: false
     state: stopped
 
@@ -29,11 +29,11 @@
 
 - name: Delete systemd unit override
   ansible.builtin.file:
-    path: /etc/systemd/system/{{ tinc__service_name }}.service.d/override.conf
+    path: /etc/systemd/system/{{ _tinc_service_name }}.service.d/override.conf
     state: absent
   notify:
     - Reload systemd
-  when: tinc__use_systemd
+  when: _tinc_use_systemd
 
 - name: Delete local configuration copy
   ansible.builtin.file:

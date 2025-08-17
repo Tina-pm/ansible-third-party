@@ -21,7 +21,7 @@ _tinc_hosts: >-
     ansible.builtin.difference(_tinc_removed_hosts)
   }}
 
-tinc__hostvars: |-
+_tinc_hostvars: |-
   {% set ns = namespace(result={}) %}
   {% for host in _tinc_hosts %}
   {% set hvars = _tinc_combined_hostvars[host] %}
@@ -39,16 +39,16 @@ tinc__hostvars: |-
 
 _tinc_connect_to: >-
   {{
-    tinc__hostvars.items() |
+    _tinc_hostvars.items() |
     selectattr('0', 'ne', inventory_hostname) |
     selectattr('1.tinc__allow_incoming_connections', 'true') |
     selectattr('1.tinc__netname', 'eq', tinc__netname) |
     map(attribute='0')
   }}
 
-tinc__other_public_addresses: >-
+_tinc_other_public_addresses: >-
   {{
-    tinc__hostvars.values() |
+    _tinc_hostvars.items() |
     selectattr('0', 'ne', inventory_hostname) |
     selectattr('1.tinc__public_addresses', 'defined') |
     map(attribute='1.tinc__public_addresses') |
@@ -56,5 +56,5 @@ tinc__other_public_addresses: >-
     sum(start=[])
    }}
 
-tinc__service_name: >-
-  {{ "tinc@" + tinc__netname if tinc__use_systemd else "tinc" }}
+_tinc_service_name: >-
+  {{ "tinc@" + tinc__netname if _tinc_use_systemd else "tinc" }}

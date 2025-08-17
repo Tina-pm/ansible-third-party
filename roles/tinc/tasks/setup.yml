@@ -9,11 +9,11 @@
 - name: Check tinc uses systemd units
   ansible.builtin.stat:
     path: /lib/systemd/system/tinc@.service
-  register: tinc__tinc_unit
+  register: _tinc_tinc_unit
 
 - name: Set fact about systemd unit
   ansible.builtin.set_fact:
-    tinc__use_systemd: '{{ tinc__tinc_unit.stat.exists }}'
+    _tinc_use_systemd: '{{ _tinc_tinc_unit.stat.exists }}'
 
 - name: Set daemon parameters in /etc/default/tinc
   ansible.builtin.lineinfile:
@@ -41,7 +41,7 @@
     create: true
   notify:
     - Restart tinc
-  when: not tinc__use_systemd
+  when: not _tinc_use_systemd
 
 - name: Create tinc.conf file from template
   ansible.builtin.template:
@@ -68,10 +68,10 @@
   ansible.builtin.command: >-
     awk '/^-----BEGIN RSA PUBLIC KEY-----$/,/^-----END RSA PUBLIC KEY-----$/'
     /etc/tinc/{{ tinc__netname }}/hosts/{{ inventory_hostname }}
-  register: tinc__public_key
+  register: _tinc_public_key
   changed_when: >
-    not tinc__public_key.stdout.endswith('-----END RSA PUBLIC KEY-----')
-  failed_when: tinc__public_key.rc not in (0, 1, 2)
+    not _tinc_public_key.stdout.endswith('-----END RSA PUBLIC KEY-----')
+  failed_when: _tinc_public_key.rc not in (0, 1, 2)
   check_mode: false
 
 - name: Set host parameters
@@ -88,7 +88,7 @@
   ansible.builtin.file:
     path: /etc/tinc/{{ tinc__netname }}/rsa_key.priv
     state: absent
-  when: tinc__public_key.changed
+  when: _tinc_public_key.changed
   notify:
     - Restart tinc
 
@@ -96,13 +96,13 @@
   ansible.builtin.command: tincd -n {{ tinc__netname }} -K4096
   args:
     creates: /etc/tinc/{{ tinc__netname }}/rsa_key.priv
-  when: tinc__public_key.changed
+  when: _tinc_public_key.changed
   notify:
     - Restart tinc
 
 - name: Find obsolete tinc host files
   ansible.builtin.command: ls /etc/tinc/{{ tinc__netname }}/hosts/
-  register: tinc__host_files
+  register: _tinc_host_files
   changed_when: false
   check_mode: false
 
@@ -110,7 +110,7 @@
   ansible.builtin.file:
     path: /etc/tinc/{{ tinc__netname }}/hosts/{{ item }}
     state: absent
-  with_items: '{{ tinc__host_files.stdout_lines }}'
+  with_items: '{{ _tinc_host_files.stdout_lines }}'
   when: item not in _tinc_hosts
 
 - name: Fetch tinc hosts file after key creation
@@ -143,11 +143,11 @@
     name: tinc
     enabled: true
     state: started
-  when: tinc__use_systemd
+  when: _tinc_use_systemd
 
 - name: Ensure tinc is started
   ansible.builtin.service:
-    name: '{{ tinc__service_name }}'
+    name: '{{ _tinc_service_name }}'
     enabled: true
     state: started
 
