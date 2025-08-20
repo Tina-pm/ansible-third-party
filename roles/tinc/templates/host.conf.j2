@@ -2,10 +2,9 @@
 {% for addr in tinc__public_addresses %}
 Address = {{ addr }} {{ tinc__port }}
 {% endfor %}
-{% for item in (
-        (tinc__vpn_local_subnets or []) + (tinc__vpn_extra_subnets or [])
-        ) %}
+{% for item in (tinc__vpn_local_subnets or []) + (tinc__vpn_extra_subnets or [])
+%}
 Subnet = {{ item }}
 {% endfor %}
 
-{{ tinc__public_key.stdout }}
+{{ _tinc_public_key.stdout }}

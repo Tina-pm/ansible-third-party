@@ -28,6 +28,10 @@ tinc__public_addresses: '{{ [ansible_host] }}'
 tinc__port: 655
 tinc__allow_incoming_connections: true
 
+# Lists of inventory names to connect to. Defaults to all hosts using the same
+# `tinc__netname` and with `tinc__allow_incoming_connections` set to `true`.
+tinc__connect_to: ~
+
 tinc__vpn_interface: '{{ tinc__netname }}'
 
 # IP addresses to assign to the VPN interface.
@@ -42,10 +46,13 @@ tinc__vpn_local_subnets: |-
   }}
 
 # Extra networks to export.
-tinc__vpn_extra_subnets:
+tinc__vpn_extra_subnets: []
 
 # Install ferm service configuration file.
 tinc__install_ferm_svc: false
+# Optionally limit access by a list of IP addresses/blocks. Defaults to all the
+# `tinc__public_addresses` of hosts using the same `tinc__netname`.
+tinc__ferm_allow_from: ~
 
 # Command paths.
 tinc__iproute2_path: /usr/bin/ip
